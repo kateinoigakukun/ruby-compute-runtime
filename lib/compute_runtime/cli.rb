@@ -4,7 +4,8 @@ module ComputeRuntime
   class Toolchain
     def initialize(opts)
       @opts = opts
-      @wasm = "tmp/head-wasm32-unknown-wasi-minimal-c@e/usr/local/bin/ruby"
+      @ruby_root = "tmp/head-wasm32-unknown-wasi-full-c@e"
+      @wasm = "#{@ruby_root}/usr/local/bin/ruby"
       raise "ruby.wasm not found" unless File.exist?(@wasm)
       check_executable("wasi-vfs")
     end
@@ -25,7 +26,7 @@ module ComputeRuntime
         "/lib" => "./lib",
       }
       if @opts[:stdlib]
-        mapping["/usr"] = "./tmp/head-wasm32-unknown-wasi-minimal-c@e/usr"
+        mapping["/usr"] = "tmp/ruby-root/usr"
       end
 
       pack_directory(@wasm, output_file, mapping)
