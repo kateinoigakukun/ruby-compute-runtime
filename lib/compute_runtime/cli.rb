@@ -2,10 +2,11 @@ require "optparse"
 
 module ComputeRuntime
   class Toolchain
-    def initialize
-      @wasm = "ruby.wasm"
+    def initialize(opts)
+      @opts = opts
+      @wasm = "tmp/head-wasm32-unknown-wasi-minimal-c@e/usr/local/bin/ruby"
       raise "ruby.wasm not found" unless File.exist?(@wasm)
-      raise "wasi-vfs not found" unless system("which", "wasi-vfs")
+      check_executable("wasi-vfs")
     end
 
     def pack_directory(infile, outfile, dirmaps)
@@ -14,12 +15,29 @@ module ComputeRuntime
     end
 
     def preset_args(infile, outfile, *args)
-      Kernel.system("wasi-preset-args", "-o", outfile, infile, "--", "--disable=gems", "/examples/demo.rb")
+      Kernel.system("wasi-preset-args", "-o", outfile, infile, "--", *args)
     end
 
     def compile(input_file, output_file)
-      pack_directory(@wasm, output_file, {"/examples" => "./examples", "/usr" => "./tmp/head-wasm32-unknown-wasi-minimal-c@e/usr"})
-      preset_args(output_file, output_file, "--disable=gems", "/examples/demo.rb")
+      mapping = {
+        # TODO: support per file mapping in wasi-vfs
+        "/exe" => File.dirname(input_file),
+        "/lib" => "./lib",
+      }
+      if @opts[:stdlib]
+        mapping["/usr"] = "./tmp/head-wasm32-unknown-wasi-minimal-c@e/usr"
+      end
+
+      pack_directory(@wasm, output_file, mapping)
+      preset_args(output_file, output_file, "--disable=gems", "-I/lib", "/exe/#{File.basename(input_file)}")
+    end
+
+    def check_executable(command)
+      (ENV["PATH"] || "").split(File::PATH_SEPARATOR).each do |path_dir|
+        bin_path = File.join(path_dir, command)
+        return bin_path if File.executable?(bin_path)
+      end
+      raise "missing executable: #{command}"
     end
   end
 
@@ -28,6 +46,7 @@ module ComputeRuntime
       args = args.dup
       opts = OptionParser.new
       opts.on("-o", "--output FILE", "Output file") { |v| @output = v }
+      opts.on("--[no-]stdlib", "Include stdlib in the output or not") { |v| @stdlib = v }
       opts.parse!
       @input = args.shift
       raise "No input file" unless @input
@@ -35,7 +54,7 @@ module ComputeRuntime
 
     def run(args)
       parse_args(args)
-      toolchain = Toolchain.new
+      toolchain = Toolchain.new(stdlib: @stdlib)
       toolchain.compile(@input, @output)
     end
   end
