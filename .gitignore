@@ -13,3 +13,5 @@
 mkmf.log
 vendor
 rubies
+compile_commands.json
+.cache

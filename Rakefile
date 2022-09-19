@@ -35,6 +35,13 @@ task :cache_key do
   puts build_task.hexdigest
 end
 
+file "compile_commands.json" do
+  ext_build_dir = File.join(BUILD_DIR, "wasm32-unknown-wasi", "#{channel}-ext", "compute_runtime")
+  args = %W(bear make -C "#{ext_build_dir}" compute_runtime.a)
+  sh(*args)
+  ln_s File.join(ext_build_dir, "compile_commands.json"), "compile_commands.json"
+end
+
 wasi_vfs = build_task.wasi_vfs
 
 RUBY_ROOT = File.join("rubies", channel)
