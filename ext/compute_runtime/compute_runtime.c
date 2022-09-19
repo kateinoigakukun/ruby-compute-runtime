@@ -1,6 +1,7 @@
 #include "compute_runtime.h"
 #include "compute_at_edge_abi.h"
 
+RBIMPL_ATTR_NORETURN()
 static void _raise_fastly_error(fastly_status_t status, int line, const char *func) {
   rb_raise(rb_eRuntimeError, "Fastly error: %d at %s:%d", status, func, line);
 }
@@ -38,7 +39,7 @@ static VALUE _fastly_http_body_write(VALUE obj, VALUE body_handle, VALUE buf, VA
   size_t nwritten;
   fastly_status_t status = fastly_http_body_write(handle, buf_ptr, buf_len, write_end, &nwritten);
   HANDLE_FASTLY_ERROR(status);
-  return INT2NUM(nwritten);
+  return RB_SIZE2NUM(nwritten);
 }
 
 static VALUE _fastly_http_body_read(VALUE obj, VALUE handle, VALUE data, VALUE data_max_len)
@@ -51,7 +52,7 @@ static VALUE _fastly_http_body_read(VALUE obj, VALUE handle, VALUE data, VALUE d
   fastly_status_t status = fastly_http_body_read(body_handle, data_ptr, data_max_len_val, &nwritten);
   HANDLE_FASTLY_ERROR(status);
   rb_str_set_len(data, nwritten);
-  return INT2NUM(nwritten);
+  return RB_SIZE2NUM(nwritten);
 }
 
 static VALUE _fastly_http_req_downstream_client_ip_addr(VALUE obj)
@@ -117,7 +118,7 @@ static VALUE _fastly_geo_lookup(VALUE obj, VALUE ip, VALUE value, VALUE value_ma
   fastly_status_t status = fastly_geo_lookup(ip_ptr, ip_len, value_ptr, value_max_len, &nwritten);
   HANDLE_FASTLY_ERROR(status);
   rb_str_set_len(value, nwritten);
-  return INT2NUM(nwritten);
+  return RB_SIZE2NUM(nwritten);
 }
 
 VALUE rb_mComputeRuntime;

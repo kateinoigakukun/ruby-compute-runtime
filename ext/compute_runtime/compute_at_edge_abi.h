@@ -1,6 +1,7 @@
 #ifndef COMPUTE_RUNTIME_COMPUTE_AT_EDGE_ABI_H
 #define COMPUTE_RUNTIME_COMPUTE_AT_EDGE_ABI_H
 
+#include <stddef.h>
 #include <stdint.h>
 
 #define WASM_IMPORT(module, name) __attribute__((import_module(module), import_name(name)))
