@@ -1,3 +1,10 @@
+GIT
+  remote: https://github.com/ruby/ruby.wasm.git
+  revision: 3b380284aea1d04cbd64ff971d4ae72365d1d743
+  branch: 3b380284aea1d04cbd64ff971d4ae72365d1d743
+  specs:
+    ruby_wasm (0.3.0)
+
 PATH
   remote: .
   specs:
@@ -14,8 +21,6 @@ GEM
       ast (~> 2.4.1)
     rainbow (3.1.1)
     rake (13.0.6)
-    rake-compiler (1.2.0)
-      rake
     regexp_parser (2.5.0)
     rexml (3.2.5)
     rubocop (1.35.1)
@@ -47,7 +52,7 @@ DEPENDENCIES
   compute_runtime!
   minitest (~> 5.0)
   rake (~> 13.0)
-  rake-compiler
+  ruby_wasm!
   standard (~> 1.3)
 
 BUNDLED WITH
