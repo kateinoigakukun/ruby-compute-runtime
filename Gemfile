@@ -7,4 +7,4 @@ gemspec
 gem "rake", "~> 13.0"
 gem "minitest", "~> 5.0"
 gem "standard", "~> 1.3"
-gem "ruby_wasm", git: "https://github.com/ruby/ruby.wasm.git", branch: "3b380284aea1d04cbd64ff971d4ae72365d1d743"
+gem "ruby_wasm", git: "https://github.com/ruby/ruby.wasm.git", branch: "main"

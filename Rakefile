@@ -1,23 +1,29 @@
 # frozen_string_literal: true
 
 require "bundler/gem_tasks"
-$LOAD_PATH << File.join(File.dirname(__FILE__), "vendor", "deps", "ruby.wasm", "lib")
-
+require "bundler/setup"
 require "rake/tasklib"
-require "ruby_wasm/build_system"
 require "ruby_wasm/rake_task"
+
+# Un-bundle the environment so that we don't use the system bundler while
+# building rubies.
+ENV.replace(Bundler.original_env)
 
 Dir.glob("tasks/**.rake").each { |f| import f }
 
+def is_perf_profiling?
+  ENV["PERF"] == "1"
+end
+
 FULL_EXTS = "bigdecimal,cgi/escape,continuation,coverage,date,dbm,digest/bubblebabble,digest,digest/md5,digest/rmd160,digest/sha1,digest/sha2,etc,fcntl,fiber,gdbm,json,json/generator,json/parser,nkf,objspace,pathname,psych,racc/cparse,rbconfig/sizeof,ripper,stringio,strscan,monitor,zlib"
 
-LIB_ROOT = File.expand_path("../vendor/deps/ruby.wasm", __FILE__)
 BUILD_DIR = File.join(Dir.pwd, "tmp", "build")
 
 options = {
   target: "wasm32-unknown-wasi",
-  src: { name: "head", type: "github", repo: "ruby/ruby", rev: "v3_2_0_preview2 ", patches: [] },
-  default_exts: FULL_EXTS,
+  src: { name: "head", type: "github", repo: "ruby/ruby", rev: "9cd086ba4b559153864ab924723a665a4ddfb5d8", patches: [] },
+  # Disable all extensions when profiling to profile only the core runtime for now.
+  default_exts: is_perf_profiling? ? "" : FULL_EXTS,
   build_dir: BUILD_DIR,
 }
 
@@ -27,8 +33,9 @@ build_task = RubyWasm::BuildTask.new(channel, **options) do |t|
   t.crossruby.user_exts = [
     RubyWasm::CrossRubyExtProduct.new(File.expand_path("../ext/compute_runtime", __FILE__), t.toolchain),
   ]
-  t.crossruby.wasmoptflags = %w["-O2"]
-  t.crossruby.cppflags = %w["-DOPT_THREADED_CODE=2"]
+  t.crossruby.wasmoptflags = %w[-O3 -g]
+  t.crossruby.debugflags = %w[-ggdb3]
+  t.crossruby.ldflags = %w[-Xlinker -zstack-size=16777216]
 end
 
 task :cache_key do

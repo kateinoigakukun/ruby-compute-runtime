@@ -8,7 +8,7 @@ Please note that This is still PoC stage for demo
 
 ## Usage
 
-You need to install [wasi-vfs](https://github.com/kateinoigakukun/wasi-vfs/releases/tag/v0.2.0) before starting this project.
+You need to install [wasi-vfs 0.5.0](https://github.com/kateinoigakukun/wasi-vfs/releases/tag/v0.5.0) before starting this project.
 
 ```console
 $ bundle install
