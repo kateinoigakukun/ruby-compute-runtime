@@ -1,6 +1,14 @@
 # Example:
 # $ ./exe/ruby-compute-runtime ./examples/proxy_request.rb -o tmp/sample.wasm
-# $ viceroy ./tmp/sample.wasm
+# $ viceroy -v -C ./fastly.toml ./tmp/sample.wasm
+#
+# [IMPORTANT] Make sure your fastly.toml file has necessary configuration like below;
+# ```
+# [local_server]
+#   [local_server.backends]
+#     [local_server.backends.origin_0]
+#       url = "https://www.ruby-lang.org"
+# ```
 
 require "compute_runtime"
 
