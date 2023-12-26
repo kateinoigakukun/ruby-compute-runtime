@@ -12,7 +12,7 @@ You need to install [wasi-vfs 0.5.0](https://github.com/kateinoigakukun/wasi-vfs
 
 ```console
 $ bundle install
-$ rake setup
+$ rake head-wasm32-unknown-wasi-full-c@e
 $ ./exe/ruby-compute-runtime ./examples/demo.rb -o tmp/sample.wasm
 
 $ # Try on local
