@@ -8,6 +8,13 @@ static void _raise_fastly_error(fastly_status_t status, int line, const char *fu
 
 #define HANDLE_FASTLY_ERROR(status) if (status != 0) _raise_fastly_error(status, __LINE__, __func__);
 
+static VALUE _fastly_abi_init(VALUE obj)
+{
+  fastly_status_t status = fastly_abi_init(1);
+  HANDLE_FASTLY_ERROR(status);
+  return Qnil;
+}
+
 static VALUE _fastly_http_body_new(VALUE obj)
 {
   body_handle_t body_handle;
@@ -55,6 +62,47 @@ static VALUE _fastly_http_body_read(VALUE obj, VALUE handle, VALUE data, VALUE d
   return RB_SIZE2NUM(nwritten);
 }
 
+
+static VALUE _fastly_http_req_new(VALUE obj) {
+  request_handle_t req_handle;
+  fastly_status_t status = fastly_http_req_new(&req_handle);
+  HANDLE_FASTLY_ERROR(status);
+  return INT2NUM(req_handle);
+}
+
+static VALUE _fastly_http_req_method_set(VALUE obj, VALUE req_handle, VALUE method){
+  request_handle_t handle = NUM2INT(req_handle);
+  const char *method_ptr = RSTRING_PTR(method);
+  size_t method_len = RSTRING_LEN(method);
+  fastly_status_t status = fastly_http_req_method_set(handle, method_ptr, method_len);
+  HANDLE_FASTLY_ERROR(status);
+  return Qnil;
+}
+
+static VALUE _fastly_http_req_uri_set(VALUE obj, VALUE req_handle, VALUE uri){
+  request_handle_t handle = NUM2INT(req_handle);
+  const char *uri_ptr = RSTRING_PTR(uri);
+  size_t uri_len = RSTRING_LEN(uri);
+  fastly_status_t status = fastly_http_req_uri_set(handle, uri_ptr, uri_len);
+  HANDLE_FASTLY_ERROR(status);
+  return Qnil;
+}
+
+static VALUE _fastly_http_req_send(VALUE obj, VALUE req_handle, VALUE body_handle, VALUE backend) {
+  request_handle_t handle = NUM2INT(req_handle);
+  body_handle_t body_handle_handle = NUM2INT(body_handle);
+  const char *backend_ptr = RSTRING_PTR(backend);
+  size_t backend_len = RSTRING_LEN(backend);
+  response_handle_t resp_handle;
+  body_handle_t resp_body_handle;
+  fastly_status_t status = fastly_http_req_send(handle, body_handle_handle, backend_ptr, backend_len, &resp_handle, &resp_body_handle);
+  HANDLE_FASTLY_ERROR(status);
+  VALUE resp_rarray = rb_ary_new();
+  rb_ary_push(resp_rarray, INT2NUM(resp_handle));
+  rb_ary_push(resp_rarray, INT2NUM(resp_body_handle));
+  return resp_rarray;
+}
+
 static VALUE _fastly_http_req_downstream_client_ip_addr(VALUE obj)
 {
   uint8_t octets[16];
@@ -62,6 +110,21 @@ static VALUE _fastly_http_req_downstream_client_ip_addr(VALUE obj)
   int status = fastly_http_req_downstream_client_ip_addr(octets, &nwritten);
   HANDLE_FASTLY_ERROR(status);
   return rb_str_new((const char*)octets, nwritten);
+}
+
+static VALUE  _fastly_http_req_body_downstream_get(VALUE obj){
+  request_handle_t req_handle;
+  body_handle_t body_handle;
+  fastly_status_t status = fastly_http_req_body_downstream_get(&req_handle, &body_handle);
+  HANDLE_FASTLY_ERROR(status);
+  printf("[req_handle:]");
+  printf("%"PRIx32"\n", req_handle);
+  printf("[body_handle:]");
+  printf("%"PRIx32"\n", body_handle);
+  VALUE resp_rarray = rb_ary_new();
+  rb_ary_push(resp_rarray, INT2NUM(req_handle));
+  rb_ary_push(resp_rarray, INT2NUM(body_handle));
+  return resp_rarray;
 }
 
 static VALUE _fastly_http_resp_new(VALUE obj) {
@@ -129,9 +192,15 @@ Init_compute_runtime(void)
   rb_mComputeRuntime = rb_define_module("ComputeRuntime");
   VALUE rb_mABI = rb_define_module_under(rb_mComputeRuntime, "ABI");
 
+  rb_define_module_function(rb_mABI, "fastly_abi_init", _fastly_abi_init, 0);
   rb_define_module_function(rb_mABI, "fastly_http_resp_new", _fastly_http_resp_new, 0);
   rb_define_module_function(rb_mABI, "fastly_http_resp_send_downstream", _fastly_http_resp_send_downstream, 3);
+  rb_define_module_function(rb_mABI, "fastly_http_req_new", _fastly_http_req_new, 0);
+  rb_define_module_function(rb_mABI, "fastly_http_req_method_set", _fastly_http_req_method_set, 2);
+  rb_define_module_function(rb_mABI, "fastly_http_req_uri_set", _fastly_http_req_uri_set, 2);
+  rb_define_module_function(rb_mABI, "fastly_http_req_send", _fastly_http_req_send, 3);
   rb_define_module_function(rb_mABI, "fastly_http_req_downstream_client_ip_addr", _fastly_http_req_downstream_client_ip_addr, 0);
+  rb_define_module_function(rb_mABI, "fastly_http_req_body_downstream_get", _fastly_http_req_body_downstream_get, 0);
   rb_define_module_function(rb_mABI, "fastly_http_body_new", _fastly_http_body_new, 0);
   rb_define_module_function(rb_mABI, "fastly_http_body_append", _fastly_http_body_append, 2);
   rb_define_module_function(rb_mABI, "fastly_http_body_close", _fastly_http_body_close, 1);
