@@ -6,6 +6,30 @@ require_relative "compute_runtime/version"
 module ComputeRuntime
   class Error < StandardError; end
 
+  class Request
+    attr_reader :handle
+    def initialize(handle = nil)
+      @handle = handle || ::ComputeRuntime::ABI.fastly_http_req_new
+    end
+
+    def method=(method)
+      ::ComputeRuntime::ABI.fastly_http_req_method_set(@handle, method)
+    end
+
+    def uri=(uri)
+      ::ComputeRuntime::ABI.fastly_http_req_uri_set(@handle, uri)
+    end
+
+    def send(body, backend)
+      ::ComputeRuntime::ABI.fastly_http_req_send(@handle, body, backend)
+    end
+
+    def self.body_downstream_get
+      #::ComputeRuntime::ABI.fastly_abi_init
+      ::ComputeRuntime::ABI.fastly_http_req_body_downstream_get
+    end
+  end
+
   class Body
     attr_reader :handle
     def initialize(handle = nil)
