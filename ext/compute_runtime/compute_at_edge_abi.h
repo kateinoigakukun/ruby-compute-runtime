@@ -22,6 +22,9 @@ typedef int32_t dictionary_handle_t;
 
 #define BODY_WRITE_END_BACK 0
 #define BODY_WRITE_END_FRONT 1
+#define HEADER_READ_BUFFER_SIZE 8192
+#define METHOD_MAX_LEN 1024
+#define URI_MAX_LEN 8192
 
 // Module fastly_abi
 WASM_IMPORT("fastly_abi", "init")

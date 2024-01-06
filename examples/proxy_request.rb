@@ -11,12 +11,14 @@
 # ```
 
 require "compute_runtime"
+require "uri"
 
 req = ComputeRuntime::Request.new
 resp = ComputeRuntime::Response.new
 begin
-    req.method = "GET"
-    req.uri = "https://www.ruby-lang.org/en/"
+    original_request = ComputeRuntime::Request.new(ComputeRuntime::Request.body_downstream_get[0])
+    req.method = original_request.method
+    req.uri = "https://www.ruby-lang.org/" + URI(original_request.uri).path
     result = req.send ComputeRuntime::Body.new.handle, "origin_0"
     resp.send_downstream ComputeRuntime::Body.new(result[1])
 rescue Exception => e
