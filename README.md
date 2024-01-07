@@ -24,6 +24,16 @@ $ fastly compute pack -w ./sample.wasm
 $ fastly compute deploy
 ```
 
+## Development
+
+If you update sources under `ext/compute_runtime`, please run `ruby-compute-runtime` command with `--remake` option as follows:
+
+```console
+$ bundle exec ruby-compute-runtime src/demo.rb -o sample.wasm --remake
+```
+
+Otherwise, it re-uses old version of extension library.
+
 ## Contributing
 
 Bug reports and pull requests are welcome on GitHub at [https://github.com/kateinoigakukun/ruby-compute-runtime](https://github.com/kateinoigakukun/ruby-compute-runtime). This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [code of conduct](https://github.com/kateinoigakukun/compute_runtime/blob/main/CODE_OF_CONDUCT.md).
