@@ -35,12 +35,17 @@ module ComputeRuntime
       run_rbwasm(*build_args)
       @wasm = output_file
 
-      mapping = {
-        # TODO: support per file mapping in wasi-vfs
-        "/exe" => File.dirname(input_file),
-      }
+      # TODO: support per file mapping in wasi-vfs
+      Dir.mktmpdir do |dir|
+        # Copy input file to the directory
+        FileUtils.cp(input_file, dir)
 
-      pack_directory(@wasm, output_file, mapping)
+        mapping = {
+          "/exe" => dir,
+        }
+
+        pack_directory(@wasm, output_file, mapping)
+      end
       preset_args(output_file, output_file, "--disable=gems", "/exe/#{File.basename(input_file)}")
     end
 

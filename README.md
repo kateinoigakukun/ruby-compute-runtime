@@ -13,7 +13,7 @@ You need to install [wasi-preset-args](https://github.com/kateinoigakukun/wasi-p
 ```console
 $ cd examples
 $ bundle install
-$ bundle exec ruby-compute-runtime src/demo.rb -o sample.wasm
+$ bundle exec ruby-compute-runtime demo.rb -o sample.wasm
 
 $ # Try on local
 $ viceroy ./sample.wasm
@@ -29,7 +29,7 @@ $ fastly compute deploy
 If you update sources under `ext/compute_runtime`, please run `ruby-compute-runtime` command with `--remake` option as follows:
 
 ```console
-$ bundle exec ruby-compute-runtime src/demo.rb -o sample.wasm --remake
+$ bundle exec ruby-compute-runtime demo.rb -o sample.wasm --remake
 ```
 
 Otherwise, it re-uses old version of extension library.
