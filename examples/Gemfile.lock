@@ -1,7 +1,7 @@
 GIT
   remote: https://github.com/ruby/ruby.wasm.git
-  revision: f98b50c38e3d27329928e149f9f6c87cfe847f3f
-  ref: f98b50c38e3d27329928e149f9f6c87cfe847f3f
+  revision: 9770bbed1c9ee3f32c713ad5882e1ee43dba9954
+  ref: 9770bbed1c9ee3f32c713ad5882e1ee43dba9954
   specs:
     ruby_wasm (2.4.1)
 
