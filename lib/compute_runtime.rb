@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "compute_runtime.so"
+require "compute_runtime/compute_runtime.so"
 require_relative "compute_runtime/version"
 
 module ComputeRuntime
