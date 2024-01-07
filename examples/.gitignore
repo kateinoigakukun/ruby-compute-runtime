@@ -1,3 +1,6 @@
 vendor/bundle
 /pkg
 fastly.toml
+/build
+/rubies
+sample.wasm

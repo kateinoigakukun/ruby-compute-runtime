@@ -32,4 +32,7 @@ Gem::Specification.new do |spec|
   spec.executables = spec.files.grep(%r{\Aexe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
   spec.extensions = ["ext/compute_runtime/extconf.rb"]
+
+  # TODO: Add dependency here after releasing a new version of ruby_wasm
+  # spec.add_runtime_dependency "ruby_wasm", "2.5.0.pre.1"
 end
