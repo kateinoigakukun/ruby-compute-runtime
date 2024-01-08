@@ -12,8 +12,16 @@ module ComputeRuntime
       @handle = handle || ::ComputeRuntime::ABI.fastly_http_req_new
     end
 
+    def method
+      ::ComputeRuntime::ABI.fastly_http_req_method_get(@handle)
+    end
+
     def method=(method)
       ::ComputeRuntime::ABI.fastly_http_req_method_set(@handle, method)
+    end
+
+    def uri
+      ::ComputeRuntime::ABI.fastly_http_req_uri_get(@handle)
     end
 
     def uri=(uri)
@@ -22,6 +30,28 @@ module ComputeRuntime
 
     def send(body, backend)
       ::ComputeRuntime::ABI.fastly_http_req_send(@handle, body, backend)
+    end
+
+    def get_header_names
+      ::ComputeRuntime::ABI.fastly_http_req_header_names_get(@handle)
+    end
+
+    def get_header_values(header_name)
+      ::ComputeRuntime::ABI.fastly_http_req_header_values_get(@handle, header_name)
+    end
+
+    def headers
+      headers = {}
+      get_header_names.each {|header_name|
+        get_header_values(header_name).each {|header_value|
+          headers[header_name] = header_value
+        } 
+      }
+      headers
+    end
+
+    def set_header(name, value)
+      ::ComputeRuntime::ABI.fastly_http_req_header_append(@handle, name, value)
     end
 
     def self.body_downstream_get
@@ -80,6 +110,14 @@ module ComputeRuntime
 
     def send_downstream(body, streaming = 0)
       ::ComputeRuntime::ABI.fastly_http_resp_send_downstream(@handle, body.handle, streaming)
+    end
+
+    def status=(code)
+      ::ComputeRuntime::ABI.fastly_http_resp_status_set(@handle, code)
+    end
+
+    def set_header(name, value)
+      ::ComputeRuntime::ABI.fastly_http_resp_header_append(@handle, name, value)
     end
   end
 

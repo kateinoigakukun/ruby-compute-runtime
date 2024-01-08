@@ -70,6 +70,15 @@ static VALUE _fastly_http_req_new(VALUE obj) {
   return INT2NUM(req_handle);
 }
 
+static VALUE _fastly_http_req_method_get(VALUE obj, VALUE req_handle){
+  request_handle_t handle = NUM2INT(req_handle);
+  uint8_t method[METHOD_MAX_LEN];
+  size_t nwritten;
+  fastly_status_t status = fastly_http_req_method_get(handle, method, METHOD_MAX_LEN, &nwritten);
+  HANDLE_FASTLY_ERROR(status);
+  return rb_str_new((const char*)method, nwritten);
+}
+
 static VALUE _fastly_http_req_method_set(VALUE obj, VALUE req_handle, VALUE method){
   request_handle_t handle = NUM2INT(req_handle);
   const char *method_ptr = RSTRING_PTR(method);
@@ -77,6 +86,15 @@ static VALUE _fastly_http_req_method_set(VALUE obj, VALUE req_handle, VALUE meth
   fastly_status_t status = fastly_http_req_method_set(handle, method_ptr, method_len);
   HANDLE_FASTLY_ERROR(status);
   return Qnil;
+}
+
+static VALUE _fastly_http_req_uri_get(VALUE obj, VALUE req_handle){
+  request_handle_t handle = NUM2INT(req_handle);
+  uint8_t uri[URI_MAX_LEN];
+  size_t nwritten;
+  fastly_status_t status = fastly_http_req_uri_get(handle, uri, URI_MAX_LEN, &nwritten);
+  HANDLE_FASTLY_ERROR(status);
+  return rb_str_new((const char*)uri, nwritten);
 }
 
 static VALUE _fastly_http_req_uri_set(VALUE obj, VALUE req_handle, VALUE uri){
@@ -112,6 +130,87 @@ static VALUE _fastly_http_req_downstream_client_ip_addr(VALUE obj)
   return rb_str_new((const char*)octets, nwritten);
 }
 
+static VALUE _fastly_http_req_header_names_get(VALUE obj, VALUE req_handle){
+  request_handle_t handle = NUM2INT(req_handle);
+  uint32_t cursor = 0;
+  int64_t cursor_next = 0;
+  uint8_t buf_ptr[HEADER_READ_BUFFER_SIZE];
+  size_t nwritten;
+  VALUE names_list = rb_ary_new();
+  while (true) {
+    fastly_status_t status = fastly_http_req_header_names_get(handle, buf_ptr, HEADER_READ_BUFFER_SIZE, cursor, &cursor_next, &nwritten);
+    HANDLE_FASTLY_ERROR(status);
+    if (nwritten <= 0) {
+      break;
+    }
+    int j = 0;
+    uint8_t header_name[HEADER_READ_BUFFER_SIZE];
+    for (int i=0; i<HEADER_READ_BUFFER_SIZE && i<nwritten; i++){
+      header_name[j] = buf_ptr[i];
+      j++;
+      if (buf_ptr[i]==0) {
+        if (j==1) {
+          break;
+        }
+        rb_ary_push(names_list, rb_str_new((const char *)header_name,j-1));
+        j = 0;
+      }
+    }
+    if (cursor_next < 0) {
+      break;
+    }
+    cursor = cursor_next;
+  }
+  return names_list;
+}
+
+static VALUE _fastly_http_req_header_values_get(VALUE obj, VALUE req_handle, VALUE name){
+  request_handle_t handle = NUM2INT(req_handle);
+  const char *name_ptr = RSTRING_PTR(name);
+  size_t name_len = RSTRING_LEN(name);
+  uint32_t cursor = 0;
+  int64_t cursor_next = 0;
+  uint8_t buf_ptr[HEADER_READ_BUFFER_SIZE];
+  size_t nwritten;
+  VALUE values_list = rb_ary_new();
+  while (true) {
+    fastly_status_t status = fastly_http_req_header_values_get(handle, name_ptr, name_len, buf_ptr, HEADER_READ_BUFFER_SIZE, cursor, &cursor_next, &nwritten);
+    HANDLE_FASTLY_ERROR(status);
+    if (nwritten <= 0) {
+      break;
+    }
+    int j = 0;
+    uint8_t header_value[HEADER_READ_BUFFER_SIZE];
+    for (int i=0; i<HEADER_READ_BUFFER_SIZE && i<nwritten; i++){
+      header_value[j] = buf_ptr[i];
+      j++;
+      if (buf_ptr[i]==0) {
+        if (j==1) {
+          break;
+        }
+        rb_ary_push(values_list, rb_str_new((const char *)header_value,j-1));
+        j = 0;
+      }
+    }
+    if (cursor_next < 0) {
+      break;
+    }
+    cursor = cursor_next;
+  }
+  return values_list;
+}
+
+static VALUE _fastly_http_req_header_append(VALUE obj, VALUE req_handle, VALUE header_name, VALUE header_value){
+  request_handle_t handle = NUM2INT(req_handle);
+  const uint8_t *name_ptr = (const uint8_t *)RSTRING_PTR(header_name);
+  size_t name_len = RSTRING_LEN(header_name);
+  const uint8_t *value_ptr = (const uint8_t *)RSTRING_PTR(header_value);
+  size_t value_len = RSTRING_LEN(header_value);
+  fastly_status_t status = fastly_http_req_header_append(handle, name_ptr, name_len, value_ptr, value_len);
+  HANDLE_FASTLY_ERROR(status);
+  return Qnil;
+}
+
 static VALUE  _fastly_http_req_body_downstream_get(VALUE obj){
   request_handle_t req_handle;
   body_handle_t body_handle;
@@ -139,6 +238,25 @@ static VALUE _fastly_http_resp_send_downstream(VALUE obj, VALUE resp_handle, VAL
   body_handle_t body_handle_handle = NUM2INT(body_handle);
   int32_t is_streaming = NUM2INT(streaming);
   fastly_status_t status = fastly_http_resp_send_downstream(handle, body_handle_handle, is_streaming);
+  HANDLE_FASTLY_ERROR(status);
+  return Qnil;
+}
+
+static VALUE _fastly_http_resp_status_set(VALUE obj, VALUE resp_handle, VALUE status_code) {
+  response_handle_t handle = NUM2INT(resp_handle);
+  int32_t code = NUM2INT(status_code);
+  fastly_status_t status = fastly_http_resp_status_set(handle, code);
+  HANDLE_FASTLY_ERROR(status);
+  return Qnil;
+}
+
+static VALUE _fastly_http_resp_header_append(VALUE obj, VALUE req_handle, VALUE header_name, VALUE header_value){
+  request_handle_t handle = NUM2INT(req_handle);
+  const uint8_t *name_ptr = (const uint8_t *)RSTRING_PTR(header_name);
+  size_t name_len = RSTRING_LEN(header_name);
+  const uint8_t *value_ptr = (const uint8_t *)RSTRING_PTR(header_value);
+  size_t value_len = RSTRING_LEN(header_value);
+  fastly_status_t status = fastly_http_resp_header_append(handle, name_ptr, name_len, value_ptr, value_len);
   HANDLE_FASTLY_ERROR(status);
   return Qnil;
 }
@@ -195,11 +313,18 @@ Init_compute_runtime(void)
   rb_define_module_function(rb_mABI, "fastly_abi_init", _fastly_abi_init, 0);
   rb_define_module_function(rb_mABI, "fastly_http_resp_new", _fastly_http_resp_new, 0);
   rb_define_module_function(rb_mABI, "fastly_http_resp_send_downstream", _fastly_http_resp_send_downstream, 3);
+  rb_define_module_function(rb_mABI, "fastly_http_resp_status_set", _fastly_http_resp_status_set, 2);
+  rb_define_module_function(rb_mABI, "fastly_http_resp_header_append", _fastly_http_resp_header_append, 3);
   rb_define_module_function(rb_mABI, "fastly_http_req_new", _fastly_http_req_new, 0);
+  rb_define_module_function(rb_mABI, "fastly_http_req_method_get", _fastly_http_req_method_get, 1);
   rb_define_module_function(rb_mABI, "fastly_http_req_method_set", _fastly_http_req_method_set, 2);
+  rb_define_module_function(rb_mABI, "fastly_http_req_uri_get", _fastly_http_req_uri_get, 1);
   rb_define_module_function(rb_mABI, "fastly_http_req_uri_set", _fastly_http_req_uri_set, 2);
   rb_define_module_function(rb_mABI, "fastly_http_req_send", _fastly_http_req_send, 3);
   rb_define_module_function(rb_mABI, "fastly_http_req_downstream_client_ip_addr", _fastly_http_req_downstream_client_ip_addr, 0);
+  rb_define_module_function(rb_mABI, "fastly_http_req_header_names_get", _fastly_http_req_header_names_get, 1);
+  rb_define_module_function(rb_mABI, "fastly_http_req_header_values_get", _fastly_http_req_header_values_get, 2);
+  rb_define_module_function(rb_mABI, "fastly_http_req_header_append", _fastly_http_req_header_append, 3);
   rb_define_module_function(rb_mABI, "fastly_http_req_body_downstream_get", _fastly_http_req_body_downstream_get, 0);
   rb_define_module_function(rb_mABI, "fastly_http_body_new", _fastly_http_body_new, 0);
   rb_define_module_function(rb_mABI, "fastly_http_body_append", _fastly_http_body_append, 2);
