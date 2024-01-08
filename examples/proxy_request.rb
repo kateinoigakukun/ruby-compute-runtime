@@ -10,6 +10,7 @@
 #       url = "https://www.ruby-lang.org"
 # ```
 
+require "/bundle/setup"
 require "compute_runtime"
 require "uri"
 
