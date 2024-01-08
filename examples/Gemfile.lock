@@ -1,3 +1,10 @@
+GIT
+  remote: https://github.com/ruby/ruby.wasm.git
+  revision: 9770bbed1c9ee3f32c713ad5882e1ee43dba9954
+  ref: 9770bbed1c9ee3f32c713ad5882e1ee43dba9954
+  specs:
+    ruby_wasm (2.4.1)
+
 PATH
   remote: ..
   specs:
@@ -6,16 +13,13 @@ PATH
 GEM
   remote: https://rubygems.org/
   specs:
-    prettier_print (0.1.0)
-    syntax_tree (3.5.0)
-      prettier_print
 
 PLATFORMS
   x86_64-linux
 
 DEPENDENCIES
   compute_runtime!
-  syntax_tree (~> 3.5)
+  ruby_wasm!
 
 BUNDLED WITH
-   2.4.0.dev
+   2.5.3

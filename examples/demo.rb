@@ -2,6 +2,7 @@
 # $ ./exe/ruby-compute-runtime ./examples/hello.rb -o tmp/sample.wasm
 # $ viceroy ./tmp/sample.wasm
 
+require "/bundle/setup"
 require "compute_runtime"
 
 body = ComputeRuntime::Body.new

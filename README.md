@@ -8,22 +8,31 @@ Please note that This is still PoC stage for demo
 
 ## Usage
 
-You need to install [wasi-vfs 0.5.0](https://github.com/kateinoigakukun/wasi-vfs/releases/tag/v0.5.0) and [wasi-preset-args](https://github.com/kateinoigakukun/wasi-preset-args/) before starting this project.
+You need to install [wasi-preset-args](https://github.com/kateinoigakukun/wasi-preset-args/) before starting this project.
 
 ```console
+$ cd examples
 $ bundle install
-$ rake head-wasm32-unknown-wasi-full-c@e
-$ ./exe/ruby-compute-runtime ./examples/demo.rb -o tmp/sample.wasm
+$ bundle exec ruby-compute-runtime demo.rb -o sample.wasm
 
 $ # Try on local
-$ viceroy ./tmp/sample.wasm
+$ viceroy ./sample.wasm
 
 $ # Deploy to Compute@Edge
-$ cd example
 $ fastly compute init
-$ fastly compute pack -w ./../tmp/sample.wasm
+$ fastly compute pack -w ./sample.wasm
 $ fastly compute deploy
 ```
+
+## Development
+
+If you update sources under `ext/compute_runtime`, please run `ruby-compute-runtime` command with `--remake` option as follows:
+
+```console
+$ bundle exec ruby-compute-runtime demo.rb -o sample.wasm --remake
+```
+
+Otherwise, it re-uses old version of extension library.
 
 ## Contributing
 

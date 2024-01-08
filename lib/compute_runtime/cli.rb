@@ -1,18 +1,21 @@
 require "optparse"
+require "ruby_wasm"
+require "ruby_wasm/cli"
 
 module ComputeRuntime
   class Toolchain
     def initialize(opts)
       @opts = opts
-      @ruby_root = "rubies/head-wasm32-unknown-wasi-full-c@e"
-      @wasm = "#{@ruby_root}/usr/local/bin/ruby"
-      raise "ruby.wasm not found" unless File.exist?(@wasm)
-      check_executable("wasi-vfs")
+    end
+
+    def run_rbwasm(*args)
+      RubyWasm::CLI.new(stdout: $stdout, stderr: $stderr).run(args)
     end
 
     def pack_directory(infile, outfile, dirmaps)
       mapdir_args = dirmaps.collect_concat { |k, v| ["--mapdir", "#{k}::#{v}"] }
-      Kernel.system("wasi-vfs", *(["pack", infile, "-o", outfile] + mapdir_args))
+      pack_args = ["pack", infile, "-o", outfile] + mapdir_args
+      run_rbwasm(*pack_args)
     end
 
     def preset_args(infile, outfile, *args)
@@ -20,17 +23,30 @@ module ComputeRuntime
     end
 
     def compile(input_file, output_file)
-      mapping = {
-        # TODO: support per file mapping in wasi-vfs
-        "/exe" => File.dirname(input_file),
-        "/lib" => "./lib",
-      }
-      if @opts[:stdlib]
-        mapping["/usr"] = "rubies/head-wasm32-unknown-wasi-full-c@e/usr"
+      # Build ruby.wasm
+      build_args = ["build", "-o", output_file]
+      case @opts[:stdlib]
+      when true
+        build_args << "--stdlib"
+      when false, nil
+        build_args << "--no-stdlib"
       end
+      build_args << "--remake" if @opts[:remake]
+      run_rbwasm(*build_args)
+      @wasm = output_file
 
-      pack_directory(@wasm, output_file, mapping)
-      preset_args(output_file, output_file, "--disable=gems", "-I/lib", "/exe/#{File.basename(input_file)}")
+      # TODO: support per file mapping in wasi-vfs
+      Dir.mktmpdir do |dir|
+        # Copy input file to the directory
+        FileUtils.cp(input_file, dir)
+
+        mapping = {
+          "/exe" => dir,
+        }
+
+        pack_directory(@wasm, output_file, mapping)
+      end
+      preset_args(output_file, output_file, "--disable=gems", "/exe/#{File.basename(input_file)}")
     end
 
     def check_executable(command)
@@ -48,6 +64,7 @@ module ComputeRuntime
       opts = OptionParser.new
       opts.on("-o", "--output FILE", "Output file") { |v| @output = v }
       opts.on("--[no-]stdlib", "Include stdlib in the output or not") { |v| @stdlib = v }
+      opts.on("--remake", "Remake ruby.wasm") { |v| @remake = v }
       opts.parse!
       @input = args.shift
       raise "No input file" unless @input
@@ -55,7 +72,7 @@ module ComputeRuntime
 
     def run(args)
       parse_args(args)
-      toolchain = Toolchain.new(stdlib: @stdlib)
+      toolchain = Toolchain.new(stdlib: @stdlib, remake: @remake)
       toolchain.compile(@input, @output)
     end
   end
