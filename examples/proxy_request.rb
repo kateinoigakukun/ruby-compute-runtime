@@ -1,6 +1,6 @@
 # Example:
-# $ ./exe/ruby-compute-runtime ./examples/proxy_request.rb -o tmp/sample.wasm
-# $ viceroy -v -C ./fastly.toml ./tmp/sample.wasm
+# $ bundle exec ruby-compute-runtime ./proxy_request.rb -o ./sample.wasm --stdlib
+# $ viceroy -v -C ./fastly.toml ./sample.wasm
 #
 # [IMPORTANT] Make sure your fastly.toml file has necessary configuration like below;
 # ```
