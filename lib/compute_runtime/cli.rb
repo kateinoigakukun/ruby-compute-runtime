@@ -13,8 +13,8 @@ module ComputeRuntime
     end
 
     def pack_directory(infile, outfile, dirmaps, dirmap_strings)
-      mapdir_args = dirmaps.collect_concat { |k, v| ["--mapdir", "#{k}::#{v}"] }
-      mapdir_args += dirmap_strings.collect_concat { |str| ["--mapdir", str] }
+      mapdir_args = dirmaps.collect_concat { |k, v| ["--dir", "#{v}::#{k}"] }
+      mapdir_args += dirmap_strings.collect_concat { |str| ["--dir", str] }
       pack_args = ["pack", infile, "-o", outfile] + mapdir_args
       run_rbwasm(*pack_args)
     end
@@ -67,7 +67,7 @@ module ComputeRuntime
       opts.on("-o", "--output FILE", "Output file") { |v| @output = v }
       opts.on("--[no-]stdlib", "Include stdlib in the output or not") { |v| @stdlib = v }
       opts.on("--remake", "Remake ruby.wasm") { |v| @remake = v }
-      opts.on("--mapping <HOST_DIR::GUEST_DIR>...", "Package a host directory into Wasm module at a guest directory") { |v| @mapping.push(v) }
+      opts.on("--dir <HOST_DIR::GUEST_DIR>...", "Package a host directory into Wasm module at a guest directory") { |v| @mapping.push(v) }
       opts.parse!
       @input = args.shift
       raise "No input file" unless @input
