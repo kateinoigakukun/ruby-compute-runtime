@@ -39,6 +39,9 @@ module ComputeRuntime
       Dir.mktmpdir do |dir|
         # Copy input file to the directory
         FileUtils.cp(input_file, dir)
+        if @opts[:mapping]
+          @opts[:mapping].split(",").each {|f| FileUtils.cp_r(f,dir)}
+        end
 
         mapping = {
           "/exe" => dir,
@@ -65,6 +68,7 @@ module ComputeRuntime
       opts.on("-o", "--output FILE", "Output file") { |v| @output = v }
       opts.on("--[no-]stdlib", "Include stdlib in the output or not") { |v| @stdlib = v }
       opts.on("--remake", "Remake ruby.wasm") { |v| @remake = v }
+      opts.on("--mapping SOURCE", "Comma-separated app source file/folder names to be mapped (e.g. some_helper.rb,lib,public)") { |v| @mapping = v }
       opts.parse!
       @input = args.shift
       raise "No input file" unless @input
@@ -72,7 +76,7 @@ module ComputeRuntime
 
     def run(args)
       parse_args(args)
-      toolchain = Toolchain.new(stdlib: @stdlib, remake: @remake)
+      toolchain = Toolchain.new(stdlib: @stdlib, remake: @remake, mapping: @mapping)
       toolchain.compile(@input, @output)
     end
   end
