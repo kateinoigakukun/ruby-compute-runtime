@@ -2,6 +2,7 @@
 
 require "compute_runtime/compute_runtime.so"
 require_relative "compute_runtime/version"
+require_relative "compute_runtime/rack_helper"
 
 module ComputeRuntime
   class Error < StandardError; end
