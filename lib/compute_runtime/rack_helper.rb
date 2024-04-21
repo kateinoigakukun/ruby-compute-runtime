@@ -1,7 +1,13 @@
 # frozen_string_literal: true
 
-require "uri"
-require "rack"
+begin
+  require "uri"
+  require "rack"
+rescue LoadError => e
+  puts "Warning:"
+  puts "   Failed to load dependeincies. Details; #{e.message}"
+  puts "   Consider adding --stdlib upon compilation or make sure rack gem is installed properly"
+end
 
 module ComputeRuntime
   module RackHelper
