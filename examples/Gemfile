@@ -5,6 +5,7 @@ source "https://rubygems.org"
 gem "compute_runtime", path: "../"
 gem "ruby_wasm", git: "https://github.com/ruby/ruby.wasm.git", ref: "fa30a3eb665dc65c9e93ffc244324043e44781c4"
 gem "rack"
+gem "uri"
 
 # Optional: only needed for lobster.rb
 gem "rackup"
